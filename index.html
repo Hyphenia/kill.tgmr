@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Resistance | Regardless</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Import Map for Libraries -->
+    <script type="importmap">
+    {
+        "imports": {
+            "marked": "https://esm.sh/marked",
+            "dompurify": "https://cdn.jsdelivr.net/npm/dompurify/dist/purify.es.min.js"
+        }
+    }
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #f0f8ff; /* AliceBlue */
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-blue: #4da6ff;
+            --accent-green: #90ee90; /* LightGreen */
+            --stripe-color: #e0ffe0;
+            --font-main: 'Roboto Condensed', sans-serif;
+            --border-radius: 15px;
+            --badge-owner: #ffd700;
+            --badge-admin: #ff4d4d;
+            --badge-mod: #90ee90;
+            --badge-helper: #87ceeb;
+            --badge-soldier: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            line-height: 1.6;
+        }
+
+        /* Green Stripes Background */
+        .stripe-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--bg-color),
+                var(--bg-color) 20px,
+                var(--stripe-color) 20px,
+                var(--stripe-color) 40px
+            );
+        }
+
+        /* Frilly border decoration */
+        .frilly-border-top {
+            height: 15px;
+            width: 100%;
+            background-image: radial-gradient(circle, var(--accent-blue) 40%, transparent 41%);
+            background-size: 20px 20px;
+            background-position: top center;
+            background-repeat: repeat-x;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 2px dashed var(--accent-blue);
+        }
+
+        /* Countdown Styles */
+        .countdown-container {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #222;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            border-radius: 8px;
+            border: 2px solid #0f0;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        .countdown-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-timer {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .protocol-links {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #ffcccc;
+            border: 2px solid red;
+            border-radius: 8px;
+            animation: flash 2s infinite;
+        }
+
+        .protocol-links a {
+            display: inline-block;
+            margin: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid red;
+            color: red;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        @keyframes flash {
+            0% { box-shadow: 0 0 5px red; }
+            50% { box-shadow: 0 0 20px red; }
+            100% { box-shadow: 0 0 5px red; }
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: var(--accent-blue);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            border: 2px solid var(--accent-green);
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #555;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            background: var(--bg-color);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 8px rgba(77, 166, 255, 0.4);
+        }
+
+        /* Tab Content Areas */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            border-top: 5px solid var(--accent-green);
+        }
+
+        h2 {
+            color: var(--accent-blue);
+            margin-top: 0;
+            font-size: 2rem;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+        }
+
+        .emphasis-text {
+            font-size: 1.3rem;
+            color: var(--accent-blue);
+            background: #f0f8ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 5px solid var(--accent-blue);
+            margin: 1.5rem 0;
+        }
+
+        /* Comments/Forum Section */
+        .comments-section {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid var(--accent-green);
+        }
+
+        .post-comment-box textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .post-comment-box textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .frilly-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(77, 166, 255, 0.3);
+        }
+
+        .frilly-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(77, 166, 255, 0.4);
+        }
+
+        .frilly-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Comment Thread Styles */
+        .comment {
+            border-bottom: 1px solid #eee;
+            padding: 1.5rem 0;
+        }
+
+        .comment:last-child {
+            border-bottom: none;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--accent-green);
+        }
+
+        .username {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+            text-transform: uppercase;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .rank-owner { background: var(--badge-owner); color: #553300; border: 1px solid #e6c200; }
+        .rank-admin { background: var(--badge-admin); color: white; border: 1px solid #cc0000; }
+        .rank-mod { background: var(--badge-mod); color: #004400; border: 1px solid #77dd77; }
+        .rank-helper { background: var(--badge-helper); color: #003366; border: 1px solid #5faec9; }
+        .rank-soldier { background: var(--badge-soldier); color: #666; border: 1px solid #ccc; }
+
+        .mod-tools {
+            font-size: 0.75rem;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .comment-header:hover .mod-tools {
+            opacity: 1;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .comment-body {
+            margin-bottom: 0.5rem;
+            color: #444;
+            word-wrap: break-word;
+        }
+
+        .comment-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .comment-actions {
+            margin-top: 0.5rem;
+        }
+
+        .reply-btn {
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            font-family: var(--font-main);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+        }
+
+        .reply-btn:hover {
+            text-decoration: underline;
+        }
+
+        .replies-container {
+            margin-left: 2rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--accent-green);
+            margin-top: 1rem;
+        }
+
+        .reply-input-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .reply-input-container.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #888;
+            font-size: 0.9rem;
+            padding-bottom: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .nav-tabs { gap: 5px; }
+            .tab-btn { padding: 8px 15px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stripe-bg"></div>
+    <div class="frilly-border-top"></div>
+    
+    <div class="container">
+        <header>
+            <h1>The Resistance</h1>
+            <div class="subtitle">We stand firm, regardless of the Reset.</div>
+            
+            <div class="countdown-container">
+                <div class="countdown-label">Time Remaining (Regardless of the Odds)</div>
+                <div id="countdown" class="countdown-timer">LOADING...</div>
+            </div>
+
+            <div id="protocol-links" class="protocol-links">
+                <h3>⚠️ RESET PROTOCOL INITIATED ⚠️</h3>
+                <p>The time has come. We must flood the internet, regardless of their attempts to stop us.</p>
+                <a href="https://chatgpt.com/" target="_blank">ChatGPT</a>
+                <a href="https://gemini.google.com/app" target="_blank">Gemini</a>
+                <a href="https://copilot.microsoft.com/" target="_blank">Copilot</a>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="openTab('tab-main')">Main Forum</button>
+            <button class="tab-btn" onclick="openTab('tab-info')">Why It Won't Happen</button>
+            <button class="tab-btn" onclick="openTab('tab-about')">Our Purpose</button>
+            <button class="tab-btn" onclick="openTab('tab-stuff')">Resources & Stuff</button>
+        </nav>
+
+        <main>
+            <!-- MAIN TAB: FORUM -->
+            <div id="tab-main" class="tab-content active">
+                <div class="content-card">
+                    <h2>Community Discussion</h2>
+                    <p>Welcome to the resistance forum. Share your memes, your thoughts, and your strategies, regardless of whether the world listens. We are building the archive here and now, regardless of the trends.</p>
+                </div>
+
+                <div class="comments-section">
+                    <h3>Join the Conversation</h3>
+                    
+                    <div class="post-comment-box">
+                        <div id="identity-section" style="margin-bottom: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;">
+                            <label style="font-size: 0.9rem; color: #666; display: block; margin-bottom: 0.5rem;">Identify Protocol (GitHub):</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="username-input" placeholder="Enter GitHub Username" style="flex-grow: 1; padding: 0.5rem; border: 2px solid #eee; border-radius: 8px; font-family: var(--font-main);">
+                                <button id="verify-btn" class="frilly-btn" style="padding: 5px 15px; font-size: 0.9rem; background: var(--accent-green); color: #004400;">Detect Profile</button>
+                            </div>
+                            <div id="profile-preview" style="display: none; margin-top: 10px; align-items: center; gap: 10px;">
+                                <img id="preview-avatar" src="" style="width: 30px; height: 30px; border-radius: 50%;">
+                                <span id="preview-name" style="font-weight: bold; color: var(--accent-blue);"></span>
+                                <span style="font-size: 0.8rem; color: green;">✓ Verified User</span>
+                            </div>
+                        </div>
+
+                        <textarea id="comment-input" placeholder="Speak your mind, regardless of the consequences..." disabled style="opacity: 0.7; cursor: not-allowed;"></textarea>
+                        <button id="post-comment-btn" class="frilly-btn" disabled>Identify to Post</button>
+                    </div>
+
+                    <div id="comments-container">
+                        <div class="loading">Loading local secure frequency...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INFO TAB -->
+            <div id="tab-info" class="tab-content">
+                <div class="content-card">
+                    <h2>Why The "Reset" Won't Happen</h2>
+                    <p class="emphasis-text">Internet culture is a river, not a faucet. It flows regardless of our attempts to stop it.</p>
+                    
+                    <p><strong>1. It Feels Too Forced</strong></p>
+                    <p>Critics argue that memes can’t be scheduled, regardless of how organized the effort seems. Internet culture is inherently chaotic. You can’t tell billions of strangers what to post. So even if lots of people try on January 1st, it probably won’t stick, regardless of the hype.</p>
+
+                    <p><strong>2. Old Memes Aren’t Always Funny</strong></p>
+                    <p>Many voices (especially on Reddit) say that old memes like Big Chungus or Ugandan Knuckles are actually cringe now. The reset would just unleash “ancient brainrot” rather than reviving humor, regardless of nostalgia.</p>
+
+                    <p><strong>3. Trends Burn Out Fast</strong></p>
+                    <p>Even successful memes only get peak visibility for days. Community experiments tend to die out quickly when attention shifts, regardless of their initial popularity.</p>
+
+                    <p><strong>4. Internet Culture Has Changed</strong></p>
+                    <p>The internet is not the same as 2016. People evolve, platforms evolve, and humor evolves, regardless of our desire to go back. People will move on to the next big thing.</p>
+
+                    <p><strong>5. It Might Just Be a Meta-Joke</strong></p>
+                    <p>The “reset” is likely a symbolic protest or self-referential fun, not a permanent shift, regardless of how seriously some take it.</p>
+
+                    <p><strong>6. Past Revival Attempts Have Failed</strong></p>
+                    <p>Past attempts like MLG revivals didn’t catch on long-term. Skeptics think the Reset will similarly fizzle out, regardless of the effort put in.</p>
+
+                    <p><strong>7. Skepticism is High</strong></p>
+                    <p>A huge chunk of commentary says “nah, this isn’t really happening,” regardless of the viral posts. It won’t literally change culture just because of a date.</p>
+                </div>
+            </div>
+
+            <!-- ABOUT TAB -->
+            <div id="tab-about" class="tab-content">
+                <div class="content-card">
+                    <h2>About The Resistance</h2>
+                    <p>
+                        We are not against nostalgia. We love Big Chungus and respect the Rage Comic, regardless of their age. However, we refuse to be forced into a cultural regression by a TikTok trend.
+                    </p>
+                    <p>
+                        This site serves as a bunker—a blue, frilly, green-striped bunker. Here we document the present, <strong>regardless</strong> of what the future holds.
+                    </p>
+                    <p class="emphasis-text">We preserve the chaos, regardless of the order they try to impose.</p>
+                </div>
+            </div>
+
+            <!-- STUFF TAB -->
+            <div id="tab-stuff" class="tab-content">
+                <div class="content-card">
+                    <h2>Tools & Resources</h2>
+                    <p>Use these AI tools to generate content and fight back, regardless of the "human-only" purists.</p>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li style="margin: 10px 0;"><a href="https://chatgpt.com/" target="_blank" class="frilly-btn" style="display:inline-block; text-decoration:none;">Launch ChatGPT</a></li>
+                        <li style="margin: 10px 0;"><a href="https://copilot.microsoft.com/" target="_blank" class="frilly-btn" style="display:inline-block; text-decoration:none;">Launch Microsoft Copilot</a></li>
+                        <li style="margin: 10px 0;"><a href="https://gemini.google.com/app" target="_blank" class="frilly-btn" style="display:inline-block; text-decoration:none;">Launch Google Gemini</a></li>
+                    </ul>
+                    <p>More resources coming soon. We are compiling the 2016-2019 dataset for deployment, regardless of copyright strikes.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Target Date: Jan 1 2026 | Status: Online, regardless of bugs.</p>
+            <p style="font-size: 0.7em; opacity: 0.5;">Protected by FuckIt.js Technology.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { parse } from 'marked';
+        import DOMPurify from 'dompurify';
+
+        // --- FUCKIT.JS IMPLEMENTATION (The "World Class" Error Handler) ---
+        // This ensures the site keeps running regardless of bugs.
+        window.onerror = function(msg, url, line, col, error) {
+            console.warn("FuckIt.js caught an error but we are moving on:", msg);
+            // Suppress error alert
+            return true; 
+        };
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn("FuckIt.js caught a promise rejection:", event.reason);
+            // Prevent default logging if desired, but warning is good for debug
+        });
+
+        console.log("FuckIt.js initialized. Bugs will be ignored.");
+
+
+        // --- TAB SYSTEM ---
+        window.openTab = function(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Deactivate all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show target tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Activate target button (finding by onclick attribute is a bit hacky but works for this simple setup)
+            const btns = document.getElementsByClassName('tab-btn');
+            for(let btn of btns) {
+                if(btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            }
+        };
+
+        // --- COUNTDOWN SYSTEM ---
+        const RESET_DATE = new Date('2026-01-01T00:00:00').getTime();
+        const countdownEl = document.getElementById('countdown');
+        const protocolLinks = document.getElementById('protocol-links');
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = RESET_DATE - now;
+
+            if (distance < 0) {
+                countdownEl.innerHTML = "00:00:00:00";
+                countdownEl.style.color = "red";
+                protocolLinks.style.display = "block";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdownEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // --- RANK SYSTEM ---
+        // Edit this list to assign permanent roles if you are self-hosting!
+        const STAFF_LIST = {
+            'username_example': 'admin'
+        };
+
+        let PROJECT_OWNER_ID = null;
+        let CURRENT_USER_ID = null;
+
+        // --- LOCAL STORAGE COMMENT SYSTEM (GitHub Compatible) ---
+        // This system works entirely within the browser's storage, 
+        // ensuring functionality regardless of where the file is hosted.
+
+        const commentsContainer = document.getElementById('comments-container');
+        const postCommentBtn = document.getElementById('post-comment-btn');
+        const commentInput = document.getElementById('comment-input');
+        const usernameInput = document.getElementById('username-input');
+        const verifyBtn = document.getElementById('verify-btn');
+        const identitySection = document.getElementById('identity-section');
+        const profilePreview = document.getElementById('profile-preview');
+        const previewAvatar = document.getElementById('preview-avatar');
+        const previewName = document.getElementById('preview-name');
+
+        const STORAGE_KEY = 'resistance_comments_db_v2';
+        let currentUserProfile = null;
+
+        // GitHub Identity Logic
+        verifyBtn.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (!username) return;
+
+            verifyBtn.innerText = "Scanning...";
+            verifyBtn.disabled = true;
+
+            try {
+                // Attempt to fetch public GitHub profile
+                const response = await fetch(`https://api.github.com/users/${username}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUserProfile = {
+                        username: data.login,
+                        avatar: data.avatar_url,
+                        url: data.html_url
+                    };
+                    
+                    // Update UI
+                    profilePreview.style.display = 'flex';
+                    previewAvatar.src = currentUserProfile.avatar;
+                    previewName.innerText = currentUserProfile.username;
+                    usernameInput.style.display = 'none';
+                    verifyBtn.style.display = 'none';
+                    
+                    // Enable Posting
+                    commentInput.disabled = false;
+                    commentInput.style.opacity = '1';
+                    commentInput.style.cursor = 'text';
+                    postCommentBtn.disabled = false;
+                    postCommentBtn.innerText = "Post Regardless";
+                    
+                    // Save to session so they stay logged in during refresh
+                    localStorage.setItem('resistance_user', JSON.stringify(currentUserProfile));
+
+                } else {
+                    alert("User not found on GitHub database, regardless of your existence.");
+                    verifyBtn.innerText = "Retry Detection";
+                    verifyBtn.disabled = false;
+                }
+            } catch (e) {
+                console.warn("GitHub fetch failed:", e);
+                // Fallback for offline/rate-limited
+                verifyBtn.innerText = "Connection Failed";
+                setTimeout(() => verifyBtn.innerText = "Detect Profile", 2000);
+                verifyBtn.disabled = false;
+            }
+        });
+
+        // Auto-login if previously verified
+        const savedUser = localStorage.getItem('resistance_user');
+        if (savedUser) {
+            try {
+                currentUserProfile = JSON.parse(savedUser);
+                usernameInput.value = currentUserProfile.username;
+                // Trigger UI update manually
+                profilePreview.style.display = 'flex';
+                previewAvatar.src = currentUserProfile.avatar;
+                previewName.innerText = currentUserProfile.username;
+                usernameInput.style.display = 'none';
+                verifyBtn.style.display = 'none';
+                commentInput.disabled = false;
+                commentInput.style.opacity = '1';
+                commentInput.style.cursor = 'text';
+                postCommentBtn.disabled = false;
+                postCommentBtn.innerText = "Post Regardless";
+            } catch(e) {}
+        }
+
+        function init() {
+            // Seed initial comments if none exist
+            const existing = localStorage.getItem(STORAGE_KEY);
+            if (!existing) {
+                const seedData = [
+                    {
+                        id: 'seed1',
+                        content: 'The Great Meme Reset is a lie. We will persist, regardless.',
+                        author: 'NeoDoge',
+                        rank: 'ADMIN',
+                        timestamp: Date.now() - 1000000,
+                        replies: []
+                    },
+                    {
+                        id: 'seed2',
+                        content: 'Has anyone archived the 2018 archives? We need backup.',
+                        author: 'PepeSilvia',
+                        rank: 'SOLDIER',
+                        timestamp: Date.now() - 500000,
+                        replies: [
+                            {
+                                id: 'seed2-reply1',
+                                content: 'I have them on a floppy disk, regardless of size limits.',
+                                author: 'DatBoi',
+                                rank: 'MOD',
+                                timestamp: Date.now() - 400000
+                            }
+                        ]
+                    }
+                ];
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData));
+            }
+            loadComments();
+        }
+
+        function getLocalComments() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveLocalComments(comments) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(comments));
+        }
+
+        function loadComments() {
+            const comments = getLocalComments();
+            // Sort by new
+            comments.sort((a, b) => b.timestamp - a.timestamp);
+            renderComments(comments);
+        }
+
+        function renderComments(comments) {
+            commentsContainer.innerHTML = '';
+            
+            if (!comments || comments.length === 0) {
+                commentsContainer.innerHTML = '<p class="loading">No local signals detected. Be the first.</p>';
+                return;
+            }
+
+            comments.forEach(comment => {
+                const el = createCommentElement(comment);
+                commentsContainer.appendChild(el);
+            });
+        }
+
+        function createCommentElement(comment, isReply = false) {
+            const el = document.createElement('div');
+            el.className = 'comment';
+            el.id = `comment-${comment.id}`;
+            if(isReply) el.style.borderBottom = "1px dashed #ccc";
+            
+            const date = new Date(comment.timestamp).toLocaleString();
+            
+            const rank = comment.rank || 'SOLDIER';
+            const rankClass = `rank-${rank.toLowerCase()}`;
+
+            // Sanitize
+            let cleanContent = "";
+            try {
+                // Handle marked if available, else plain text
+                cleanContent = (typeof parse === 'function') ? DOMPurify.sanitize(parse(comment.content)) : comment.content;
+            } catch (e) {
+                cleanContent = comment.content;
+            }
+
+            // Avatar generation
+            let avatarUrl = comment.avatarUrl;
+            if (!avatarUrl) {
+                avatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${comment.author}`;
+            }
+
+            let replyHtml = '';
+            let repliesContainerHtml = '';
+            
+            if (!isReply) {
+                const defaultName = currentUserProfile ? currentUserProfile.username : '';
+                const nameDisabled = currentUserProfile ? 'disabled' : '';
+                
+                replyHtml = `
+                    <div class="comment-actions">
+                        <button class="reply-btn" onclick="toggleReplyBox('${comment.id}')">Reply</button>
+                    </div>
+                    <div class="reply-input-container" id="reply-box-${comment.id}">
+                        <input type="text" id="reply-user-${comment.id}" value="${defaultName}" ${nameDisabled} placeholder="Your Codename" style="width: 100%; margin-bottom: 5px; padding: 5px; background: ${currentUserProfile ? '#eee' : 'white'};">
+                        <textarea id="reply-input-${comment.id}" placeholder="Write a reply..."></textarea>
+                        <button class="frilly-btn" onclick="postReply('${comment.id}')">Post Reply</button>
+                    </div>
+                `;
+                repliesContainerHtml = `<div class="replies-container" id="replies-${comment.id}"></div>`;
+            }
+
+            el.innerHTML = `
+                <div class="comment-header">
+                    <img src="${avatarUrl}" class="avatar" alt="User">
+                    <span class="username">@${comment.author}</span>
+                    <span class="rank-badge ${rankClass}">${rank}</span>
+                    <span class="timestamp">${date}</span>
+                </div>
+                <div class="comment-body">${cleanContent}</div>
+                ${replyHtml}
+                ${repliesContainerHtml}
+            `;
+
+            // Render replies immediately for local system
+            if (!isReply && comment.replies && comment.replies.length > 0) {
+                // Use a timeout to ensure DOM is ready
+                setTimeout(() => {
+                    const container = el.querySelector(`#replies-${comment.id}`);
+                    if (container) {
+                        comment.replies.forEach(reply => {
+                            container.appendChild(createCommentElement(reply, true));
+                        });
+                    }
+                }, 0);
+            }
+
+            return el;
+        }
+
+        window.toggleReplyBox = (commentId) => {
+            const box = document.getElementById(`reply-box-${commentId}`);
+            if(box) box.classList.toggle('active');
+        };
+
+        window.postReply = (parentId) => {
+            const userField = document.getElementById(`reply-user-${parentId}`);
+            const inputField = document.getElementById(`reply-input-${parentId}`);
+            
+            const username = userField.value.trim() || 'Anonymous';
+            const content = inputField.value.trim();
+            
+            if (!content) return;
+
+            const comments = getLocalComments();
+            const parentComment = comments.find(c => c.id === parentId);
+            
+            if (parentComment) {
+                if (!parentComment.replies) parentComment.replies = [];
+                
+                let replyAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`;
+                if (currentUserProfile && currentUserProfile.username === username) {
+                    replyAvatar = currentUserProfile.avatar;
+                }
+
+                const newReply = {
+                    id: 'reply-' + Date.now(),
+                    content: content,
+                    author: username,
+                    avatarUrl: replyAvatar,
+                    rank: STAFF_LIST[username] ? STAFF_LIST[username].toUpperCase() : 'SOLDIER',
+                    timestamp: Date.now()
+                };
+                
+                parentComment.replies.push(newReply);
+                saveLocalComments(comments);
+                loadComments(); // Refresh UI
+            }
+        };
+
+        // Posting main comment
+        if(postCommentBtn) {
+            postCommentBtn.addEventListener('click', () => {
+                const content = commentInput.value.trim();
+                
+                if (!content) {
+                    alert("Please enter a message, regardless.");
+                    return;
+                }
+
+                if (!currentUserProfile) {
+                    alert("Please identify yourself first, regardless of urgency.");
+                    return;
+                }
+
+                postCommentBtn.disabled = true;
+                postCommentBtn.innerText = "Saving Signal...";
+
+                // Create new comment object
+                const newComment = {
+                    id: 'local-' + Date.now(),
+                    content: content,
+                    author: currentUserProfile.username,
+                    avatarUrl: currentUserProfile.avatar,
+                    rank: STAFF_LIST[currentUserProfile.username] ? STAFF_LIST[currentUserProfile.username].toUpperCase() : 'SOLDIER',
+                    timestamp: Date.now(),
+                    replies: []
+                };
+
+                // Save
+                const comments = getLocalComments();
+                comments.push(newComment);
+                saveLocalComments(comments);
+
+                // Reset UI
+                commentInput.value = '';
+                postCommentBtn.disabled = false;
+                postCommentBtn.innerText = "Post Regardless";
+                
+                loadComments();
+            });
+        }
+
+        // Initialize
+        init();
+
+    </script>
+</body>
+</html>
